@@ -1,9 +1,9 @@
 const fs = require('fs-extra');
 
-const writeFile = async (filePath, data) => new Promise(async (resolve) => {
+const writeFile = async (filePath, data) => new Promise(async (resolve, reject) => {
   fs.writeFile(filePath, data, function(err) {
     if(err) {
-        reject();
+        reject(err);
         return console.log(err);
     }
 

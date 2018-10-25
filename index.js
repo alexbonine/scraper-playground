@@ -12,14 +12,6 @@ const configQuestion = [
   },
 ];
 
-const moreQuestion = [
-  {
-    type: 'confirm',
-    name: 'more',
-    message: 'Are there more urls?',
-  },
-];
-
 const questions = [
   {
     type: 'input',
@@ -62,21 +54,13 @@ const readFile = (file) => {
 const promptImg = (getPic) => new Promise(async (resolve) => {
   const answers = await prompt(imgQuestions);
   await getPic(answers.url, answers.name || undefined, answers.picNumber);
-  const moreAnswers = await prompt(moreQuestion);
-
-  if (moreAnswers.more) {
-    return promptImg(getPic);
-  }
+  return promptImg(getPic);
 });
 
 const promptVid = (getVid) => new Promise(async (resolve) => {
   const answers = await prompt(questions);
   await getVid(answers.url, answers.name || undefined);
-  const moreAnswers = await prompt(moreQuestion);
-
-  if (moreAnswers.more) {
-    return promptImg(getVid);
-  }
+  return promptImg(getVid);
 });
 
 program
