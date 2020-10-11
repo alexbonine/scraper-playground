@@ -7,15 +7,16 @@ const IMG_SELECTOR = '.FFVAD';
 const DATE_SELECTOR = '.Nzb55';
 const NEXT_SELECTOR = '._6CZji';//'.coreSpriteRightChevron'; //'.SWk3c'
 const SAVE_INFO_SELECTOR = '.sqdOP';
+const CLOSE_SELECTOR = '.xqRnw';
 const USERNAME_SELECTOR = 'header a.sqdOP';
 const TITLE_SELECTOR = 'head > title';
 
 let browser;
 let page;
 
-const getPic = ({ defaultDir, destPath, linksFile }) => async (imgUrl, altName = '', number) => {
+const getPic = ({ defaultDir, destPath, linksFile, password, username }) => async (imgUrl, altName = '', number) => {
   if (!browser) {
-    browser = await puppeteer.launch({ headless: true /*false, devtools: true, slowMo: 250*/ });
+    browser = await puppeteer.launch({ headless: false, devtools: true, /*slowMo: 250*/ });
   }
 
   if (!page) {
@@ -30,15 +31,15 @@ const getPic = ({ defaultDir, destPath, linksFile }) => async (imgUrl, altName =
     dirName = defaultDir;
     fileName = imgUrl.replace(/(.*)(.(gif|jpg|jpeg))$/, `${altName}$2`).replace('@', '');
   } else {
-    const openPage = await page.goto(imgUrl, { waitUntil: 'domcontentloaded' });
+    const openPage = await page.goto(imgUrl, { waitUntil: 'networkidle2' });
 
     if (openPage.url().includes('login')) {
       await page.waitForSelector('input[name=username]');
       const usernameInput = await page.$('input[name=username]');
       if (usernameInput) {
-        await usernameInput.type('thug_wagon');
+        await usernameInput.type(username);
         const passwordInput = await page.$('input[name=password]');
-        await passwordInput.type('SexyTime10');
+        await passwordInput.type(password);
         await Promise.all([passwordInput.press('Enter'), page.waitForNavigation()]);
 
         const saveInfoButton = await page.$(SAVE_INFO_SELECTOR);
@@ -46,6 +47,11 @@ const getPic = ({ defaultDir, destPath, linksFile }) => async (imgUrl, altName =
           await Promise.all([saveInfoButton.click(), page.waitForNavigation()]);
         }
       }
+    }
+
+    const loginExists = await page.$(CLOSE_SELECTOR);
+    if (loginExists) {
+      await page.click(CLOSE_SELECTOR); // close login popup
     }
 
     if (number > 1) {

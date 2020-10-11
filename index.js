@@ -69,7 +69,7 @@ program
   .description('Read file of urls (either array of strings or objects with url/name)')
   .action(async (file) => {
     const config = await prompt(configQuestion);
-    const getPic = await getPicInit(require(config.file));
+    const getPic = getPicInit(require(config.file));
 
     readFile(file).forEach((entry) => {
       if (typeof entry === 'string') {
