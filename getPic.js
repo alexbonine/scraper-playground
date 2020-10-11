@@ -4,10 +4,9 @@ const writeFile = require('./writeFile');
 const updateLinks = require('./updateLinks');
 
 const IMG_SELECTOR = '.FFVAD';
-const USERNAME_SELECTOR = '.notranslate';
 const DATE_SELECTOR = '.Nzb55';
-const CLOSE_SELECTOR = '.Ls00D';
 const NEXT_SELECTOR = '._6CZji';//'.coreSpriteRightChevron'; //'.SWk3c'
+const SAVE_INFO_SELECTOR = '.sqdOP';
 
 const getPic = ({ defaultDir, destPath, linksFile }) => (imgUrl, altName = '', number) => {
   return puppeteer.launch({ headless: true /*false, devtools: true, slowMo: 250*/ }).then(async (browser) => {
@@ -20,11 +19,22 @@ const getPic = ({ defaultDir, destPath, linksFile }) => (imgUrl, altName = '', n
       dirName = defaultDir;
       fileName = imgUrl.replace(/(.*)(.(gif|jpg|jpeg))$/, `${altName}$2`).replace('@', '');
     } else {
-      await page.goto(imgUrl, { waitUntil: 'domcontentloaded' });
+      const openPage = await page.goto(imgUrl, { waitUntil: 'domcontentloaded' });
 
-      const loginExists = await page.$(CLOSE_SELECTOR);
-      if (loginExists) {
-        await page.click(CLOSE_SELECTOR); // close login popup
+      if (openPage.url().includes('login')) {
+        await page.waitForSelector('input[name=username]');
+        const usernameInput = await page.$('input[name=username]');
+        if (usernameInput) {
+          await usernameInput.type('thug_wagon');
+          const passwordInput = await page.$('input[name=password]');
+          await passwordInput.type('SexyTime10');
+          await Promise.all([passwordInput.press('Enter'), page.waitForNavigation()]);
+
+          const saveInfoButton = await page.$(SAVE_INFO_SELECTOR);
+          if (saveInfoButton) {
+            await Promise.all([saveInfoButton.click(), page.waitForNavigation()]);
+          }
+        }
       }
 
       if (number > 1) {
@@ -40,14 +50,14 @@ const getPic = ({ defaultDir, destPath, linksFile }) => (imgUrl, altName = '', n
 
       const img = await page.$$eval(IMG_SELECTOR, (elArray, index) => {
         const el = elArray[index];
-        return { src: el.src.replace(/[^.*]\?.*/, ''), alt: el.alt };
+        return { src: el.src, alt: el.alt }; // was removing ? from src .replace(/[^.*]\?.*/, '')
       }, number ? number - 1 : 0);
 
       src = img.src;
-      dirName = await page.$eval(USERNAME_SELECTOR, el => el.title);
+      dirName = await page.$eval('header a', el => el.innerHTML);
       const date = await page.$eval(DATE_SELECTOR, el => el.title);
       const title = await page.$eval('head > title', el => el.innerHTML.replace(/ ?\n/, ' ').replace(/(.*)“(.*)”/mi, '$2').replace(/\/|@/gi, ''));
-      const imageAlt = img.alt ? img.alt.replace('@', '') : '';
+      const imageAlt = ''; // img.alt ? img.alt.replace('@', '') : ''; // now is description from facebook
       fileName = `${altName || imageAlt || title}${number ? `-${number}` : ''}-${date}.jpg`; //[0-9a-zA-Z\^\&\'\@\{\}\[\]\,\$\=\!\-\#\(\)\.\%\+\~\_ ]+
     }
 
