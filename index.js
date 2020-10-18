@@ -3,6 +3,7 @@ const { prompt } = require('inquirer');
 const fs = require('fs-extra');
 const getPicInit = require('./getPic');
 const getVidInit = require('./getVid');
+const dedupeBookmarks = require('./dedupeBookmarks');
 
 const configQuestion = [
   {
@@ -43,9 +44,15 @@ const imgQuestions = [
   },
 ];
 
-const readFile = (file) => {
+const readFile = (file, noParse = false) => {
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
+    const readFile = fs.readFileSync(file, 'utf8');
+
+    if (noParse) {
+      return readFile;
+    }
+
+    return JSON.parse(readFile);
   } catch (e) {
     throw e;
   }
@@ -85,8 +92,9 @@ program
   .alias('i')
   .description('Read file of urls (either strings or objects with url/name)')
   .action(async () => {
-    const config = await prompt(configQuestion); // read file name first
-    const getPic = getPicInit(require(config.file));
+    // const config = await prompt(configQuestion); // read file name first
+    // const getPic = getPicInit(require(config.file));
+    const getPic = getPicInit(require('/Users/bonine/Dropbox/Coursework/links.config.js'));
     await promptImg(getPic);
   });
 
@@ -117,7 +125,17 @@ program
     await promptImg(getVid);
   });
 
-if (!process.argv.slice(2).length || !/[iIvV]/.test(process.argv.slice(2))) {
+program
+  .command('dedupe')
+  .alias('d')
+  .description('Dedupe a bookmarks file from Google Chrome')
+  .action(async () => {
+    const config = await prompt([{ ...configQuestion[0], message: 'Enter Bookmarks File (exported from chrome)' }]);
+    const file = readFile(config.file, true);
+    await dedupeBookmarks(file, config.file);
+  });
+
+if (!process.argv.slice(2).length) {
   program.outputHelp();
   process.exit();
 }
