@@ -94,7 +94,7 @@ program
   .action(async () => {
     // const config = await prompt(configQuestion); // read file name first
     // const getPic = getPicInit(require(config.file));
-    const getPic = getPicInit(require('/Users/bonine/Dropbox/Coursework/links.config.js'));
+    const getPic = getPicInit(require('/Users/bo9/Dropbox/Coursework/links.config.js'));
     await promptImg(getPic);
   });
 
